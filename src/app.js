@@ -11,13 +11,15 @@ export function createApp({ token = process.env.API_TOKEN } = {}) {
       res.end(JSON.stringify(data));
     };
     try {
-      const url = new URL(req.url, 'http://localhost');
-      if (req.method === 'GET' && url.pathname === '/health') return send(200, { status: 'ok' });
+      if (req.method === 'GET' && /^\/health(?:\?|$)/.test(req.url)) return send(200, { status: 'ok' });
       if (!authorized(req.headers.authorization)) {
         req.resume();
         res.setHeader('WWW-Authenticate', 'Bearer');
         return send(401, { error: 'Unauthorized' });
       }
+      let url;
+      try { url = new URL(req.url, 'http://localhost'); }
+      catch { return send(400, { error: 'Invalid request URL' }); }
       res.setHeader('Cache-Control', 'no-store');
       if (req.method === 'GET' && url.pathname === '/tasks') {
         return send(200, { items: [...tasks.values()] });

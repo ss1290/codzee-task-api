@@ -1,3 +1,5 @@
+import { request as httpRequest } from 'node:http';
+import { once } from 'node:events';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp } from '../src/app.js';
@@ -29,4 +31,21 @@ test('bearer scheme is case insensitive, credentials are exact', () => {
   assert.equal(check('bearer '+token), true);
   assert.equal(check('Bearer '+token.toLowerCase()), false);
   assert.equal(check('Bearer '+token+' '), false);
+});
+
+test('malformed request targets return 401 before auth and 400 after auth', async t => {
+  const token = 'b'.repeat(32);
+  const server = createApp({ token });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+  const raw = headers => new Promise((resolve, reject) => {
+    const req = httpRequest({ host: '127.0.0.1', port: server.address().port, path: '//', headers }, res => {
+      res.resume();
+      res.on('end', () => resolve({ status: res.statusCode, challenge: res.headers['www-authenticate'] }));
+    });
+    req.on('error', reject); req.end();
+  });
+  assert.deepEqual(await raw({}), { status: 401, challenge: 'Bearer' });
+  assert.equal((await raw({ authorization: `Bearer ${token}` })).status, 400);
 });
