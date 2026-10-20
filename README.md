@@ -4,7 +4,7 @@ A small HTTP task API built with Node.js standard libraries. No dependencies, ac
 
 ## Run
 
-Requires Node.js 22 or newer. Run `npm test`, then `npm start`.
+Requires Node.js 22 or newer. Run `npm test`, then configure `API_TOKEN` as described in `docs/authentication.md` and run `npm start`.
 The server listens on `127.0.0.1:3000`; set `PORT` to change the port.
 
 ## API
@@ -15,7 +15,7 @@ The server listens on `127.0.0.1:3000`; set `PORT` to change the port.
 - `GET /tasks/:id`: retrieve one task.
 - `DELETE /tasks/:id`: delete one task.
 
-Tasks are held in memory and reset on restart. The baseline has no authentication and is for local development. Do not expose it publicly.
+Tasks are held in memory and reset on restart. This branch requires a shared bearer token. It is a local evaluation API; use HTTPS and deployment hardening before exposing it.
 
 ## Review evaluation
 
