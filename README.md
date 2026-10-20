@@ -27,3 +27,10 @@ Three independent branches target the baseline so each PR has a focused diff:
 
 Install Codzee on this repository before opening these PRs. Keep the PRs open until reviews are recorded. These are independent evaluation branches; combine them only after integration testing.
 See `docs/evaluation.md` for the evidence log. AI assistance was used to implement the project and tests; product feedback must come from actual Codzee reviews.
+
+## Public assessment links
+
+- [PR #1: Search](https://github.com/ss1290/codzee-task-api/pull/1)
+- [PR #2: Validation](https://github.com/ss1290/codzee-task-api/pull/2)
+- [PR #3: Authentication](https://github.com/ss1290/codzee-task-api/pull/3)
+- [Observed reviews, fixes, feedback and suggestions](docs/evaluation.md)
