@@ -1,7 +1,9 @@
+import { createAuthorizer } from './auth.js';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
-export function createApp() {
+export function createApp({ token = process.env.API_TOKEN } = {}) {
+  const authorized = createAuthorizer(token);
   const tasks = new Map();
   return createServer(async (req, res) => {
     const send = (status, data) => {
@@ -11,6 +13,12 @@ export function createApp() {
     try {
       const url = new URL(req.url, 'http://localhost');
       if (req.method === 'GET' && url.pathname === '/health') return send(200, { status: 'ok' });
+      if (!authorized(req.headers.authorization)) {
+        req.resume();
+        res.setHeader('WWW-Authenticate', 'Bearer');
+        return send(401, { error: 'Unauthorized' });
+      }
+      res.setHeader('Cache-Control', 'no-store');
       if (req.method === 'GET' && url.pathname === '/tasks') {
         return send(200, { items: [...tasks.values()] });
       }
