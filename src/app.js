@@ -1,3 +1,4 @@
+import { queryTasks } from './query.js';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -12,7 +13,8 @@ export function createApp() {
       const url = new URL(req.url, 'http://localhost');
       if (req.method === 'GET' && url.pathname === '/health') return send(200, { status: 'ok' });
       if (req.method === 'GET' && url.pathname === '/tasks') {
-        return send(200, { items: [...tasks.values()] });
+        try { return send(200, queryTasks([...tasks.values()], url.searchParams)); }
+        catch (error) { return send(400, { error: error.message }); }
       }
       if (req.method === 'POST' && url.pathname === '/tasks') {
         let raw = '';
