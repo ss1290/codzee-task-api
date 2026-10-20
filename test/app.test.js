@@ -15,6 +15,6 @@ test('create, retrieve, list and delete a task through HTTP', async t => {
 test('malformed input and unknown routes return useful errors', async t => {
   const request = await fixture(t);
   assert.equal((await request('/tasks', post({ title: ' ' }))).status, 400);
-  assert.equal((await request('/tasks', { method: 'POST', body: '{' })).status, 400);
+  assert.equal((await request('/tasks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' })).status, 400);
   assert.equal((await request('/missing')).status, 404);
 });

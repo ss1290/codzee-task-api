@@ -1,3 +1,4 @@
+import { readTask, RequestError } from './validation.js';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -15,13 +16,7 @@ export function createApp() {
         return send(200, { items: [...tasks.values()] });
       }
       if (req.method === 'POST' && url.pathname === '/tasks') {
-        let raw = '';
-        for await (const chunk of req) raw += chunk;
-        let body;
-        try { body = JSON.parse(raw); } catch { return send(400, { error: 'Invalid JSON' }); }
-        if (!body || typeof body.title !== 'string' || !body.title.trim()) {
-          return send(400, { error: 'A non-empty title is required' });
-        }
+        const body = await readTask(req);
         const task = { id: randomUUID(), title: body.title.trim(), completed: false, createdAt: new Date().toISOString() };
         tasks.set(task.id, task);
         return send(201, task);
@@ -35,7 +30,8 @@ export function createApp() {
         return tasks.delete(match[1]) ? send(200, { deleted: true }) : send(404, { error: 'Task not found' });
       }
       return send(404, { error: 'Route not found' });
-    } catch {
+    } catch (error) {
+      if (error instanceof RequestError) return send(error.status, { error: error.message });
       if (!res.headersSent) send(500, { error: 'Internal server error' });
       else res.destroy();
     }
