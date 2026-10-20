@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fixture, post } from './helpers.js';
@@ -21,5 +22,17 @@ test('limits bytes rather than characters and server remains usable after reject
   assert.equal((await request('/tasks', post({ title: '\u{1F600}'.repeat(5000) }))).status, 413);
   assert.equal((await request('/tasks', post({ title: '\u{1F600}'.repeat(200) }))).status, 201);
   assert.equal((await request('/health')).status, 200);
+  assert.equal((await request('/tasks')).body.items.length, 1);
+});
+
+test('streamed JSON accepts exactly 16 KiB and rejects the next byte', async t => {
+  const request = await fixture(t);
+  const json = JSON.stringify({ title: 'Boundary task' });
+  const bodyOfSize = size => json + ' '.repeat(size - Buffer.byteLength(json));
+  const streamed = text => ({ method: 'POST', headers: { 'content-type': 'application/json' },
+    body: Readable.from([Buffer.from(text.slice(0, 8000)), Buffer.from(text.slice(8000))]), duplex: 'half' });
+  assert.equal((await request('/tasks', streamed(bodyOfSize(16384)))).status, 201);
+  assert.equal((await request('/tasks', streamed(bodyOfSize(16385)))).status, 413);
+  assert.equal((await request('/tasks', { ...post({ title: 'Wrong charset' }), headers: { 'content-type': 'application/json; charset=latin1' } })).status, 415);
   assert.equal((await request('/tasks')).body.items.length, 1);
 });
