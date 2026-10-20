@@ -17,10 +17,10 @@ export function createApp({ token = process.env.API_TOKEN } = {}) {
         res.setHeader('WWW-Authenticate', 'Bearer');
         return send(401, { error: 'Unauthorized' });
       }
+      res.setHeader('Cache-Control', 'no-store');
       let url;
       try { url = new URL(req.url, 'http://localhost'); }
       catch { return send(400, { error: 'Invalid request URL' }); }
-      res.setHeader('Cache-Control', 'no-store');
       if (req.method === 'GET' && url.pathname === '/tasks') {
         return send(200, { items: [...tasks.values()] });
       }

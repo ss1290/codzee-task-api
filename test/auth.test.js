@@ -42,10 +42,12 @@ test('malformed request targets return 401 before auth and 400 after auth', asyn
   const raw = headers => new Promise((resolve, reject) => {
     const req = httpRequest({ host: '127.0.0.1', port: server.address().port, path: '//', headers }, res => {
       res.resume();
-      res.on('end', () => resolve({ status: res.statusCode, challenge: res.headers['www-authenticate'] }));
+      res.on('end', () => resolve({ status: res.statusCode, challenge: res.headers['www-authenticate'], cacheControl: res.headers['cache-control'] }));
     });
     req.on('error', reject); req.end();
   });
-  assert.deepEqual(await raw({}), { status: 401, challenge: 'Bearer' });
-  assert.equal((await raw({ authorization: `Bearer ${token}` })).status, 400);
+  assert.deepEqual(await raw({}), { status: 401, challenge: 'Bearer', cacheControl: undefined });
+  const authenticated = await raw({ authorization: `Bearer ${token}` });
+  assert.equal(authenticated.status, 400);
+  assert.equal(authenticated.cacheControl, 'no-store');
 });
